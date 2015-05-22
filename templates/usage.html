@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="formwrapper" class="ui-corner-all" >
+	<form id="dashboardForm">
+	{% csrf_token %}
+	<p>
+		<span class="field_label">{{ form.from_date.label_tag }}</span> : <span class="field_value">{{ form.from_date }}</span><span class="field_spacer">          </span><span class="field_label">{{ form.to_date.label_tag }}</span> : <span class="field_value">{{ form.to_date }}</span>
+	</p>
+	<p>
+		<span class="field_label">{{ form.reports.label_tag }}</span> : <span class="field_value">{{ form.reports }}</span>
+	</p>
+	<br/>
+    <input type='submit' id="form_submit" value='Generate Report'/>
+	</form> 
+</div>
+	<div id="resultPane" class="ui-corner-all resultPane" >
+	</div>
+{% endblock %}
+{% block script %}
+	$("#id_from_date").datepicker({numberOfMonths : 1, minDate: (new Date(2013,1 - 1,1)), maxDate: "+0D"});
+	$("#id_to_date").datepicker({numberOfMonths:1, maxDate:"+1D"});
+	$("#form_submit").button();
+	$('#dashboardForm').submit(function(event) {
+		event.preventDefault();
+		var $form = $( this );
+		var $success = function(data) {
+			$("#progressbar").progressbar({disabled:true});
+			$('#resultPane').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table><br/><a download="report.csv" id="csv_submit">Download CSV</a>' );
+			$('#example').dataTable({
+				"bJQueryUI": true,
+				"bSort": false,
+				"aaData": data['content'],
+				"aoColumns": data['header']
+			});
+			var csv_header = []
+			var csv_body = [];
+			$.each(data['header'],function(k, v) {csv_header.push(v['sTitle']);});
+			var head = csv_header.join(',');
+			csv_body.push(head);
+			$.each(data['content'],function(i, val) {csv_body.push(val.join(','));});
+			var out = encodeURIComponent(csv_body.join('\n'));
+			$('#csv_submit').attr("href","data:application/csv;charset=utf-8,"+out);
+		};
+		$.ajaxSetup({
+			crossDomain: false, // obviates need for sameOrigin test
+			beforeSend: function(xhr,settings) {
+				xhr.setRequestHeader('X-CSRFToken',csrftoken);
+			}
+		});
+		$('#resultPane').empty().append('<div class="progressbar"></div>');
+		var posting = $.post("/usage", $form.serialize(), $success, "json");
+		$(".progressbar").progressbar({value:false});
+	});
+	
+{% endblock %}
+

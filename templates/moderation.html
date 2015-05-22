@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="formwrapper" class="ui-corner-all" >
+	<form id="dashboardForm">
+	{% csrf_token %}
+	<p>
+		<span class="field_label">{{ form.from_date.label_tag }}</span> : <span class="field_value">{{ form.from_date }}</span><span class="field_spacer">          </span><span class="field_label">{{ form.to_date.label_tag }}</span> : <span class="field_value">{{ form.to_date }}</span>
+	</p>
+	<p>
+		<span class="field_label">{{ form.reports.label_tag }}</span> : <span class="field_value">{{ form.reports }}</span>
+	</p>
+	<br/>
+    <input type='submit' id="form_submit" value='Generate Report'/>
+	</form> 
+</div>
+	<div id="resultPane" class="ui-corner-all resultPane" >
+
+	</div>
+{% endblock %}
+{% block script %}
+	$("#id_from_date").datepicker({numberOfMonths : 1, minDate: (new Date(2013,4 - 1,1)), maxDate: "+0D"});
+	$("#id_to_date").datepicker({numberOfMonths:1, maxDate:"+1D"});
+	$("#form_submit").button();
+	$('#dashboardForm').submit(function(event) {
+		event.preventDefault();
+		var $form = $( this );
+		var $success = function(data) {
+			$("#progressbar").progressbar({disabled:true});
+			$('#resultPane').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table>' );
+			$('#example').dataTable({
+				"bJQueryUI": true,
+				"bSort": false,
+				"aaData": data['content'],
+				"aoColumns": data['header']
+			});
+			/*
+			if($form.find('select[name="reports"]').val() == 'reviews'){
+				var html = '<table border="1" class="restable"><tr><th>Place Name</th><th>Address</th><th>Review Text</th><th>Status</th></tr>';
+				$.each(data, function() {html += '<tr><td>'+this.place+'</td><td>'+this.address+'</td><td>'+this.text+'</td><td>'+this.status+'</td></tr>';});
+				html+='</table>'
+			} else if($form.find('select[name="reports"]').val() == 'landmarks'){
+				var html = '<table border="1" class="restable"><tr><th>Place Name</th><th>Address</th><th>Landmark Text</th></tr>';
+				$.each(data, function() {html += '<tr><td>'+this.place+'</td><td>'+this.address+'</td><td>'+this.text+'</td></tr>';});
+				html+='</table>'
+			} else if($form.find('select[name="reports"]').val() == 'phones'){
+				var html = '<table border="1" class="restable"><tr><th>Place Name</th><th>Address</th><th>Phone Text</th></tr>';
+				$.each(data, function() {html += '<tr><td>'+this.place+'</td><td>'+this.address+'</td><td>'+this.text+'</td></tr>';});
+				html+='</table>'
+			} else {
+				$.each(data, function(i, val){html += '<p><b>'+i+'</b> : '+val+'</p>';});
+			}
+			$('#resultPane').empty().html(html);
+			*/
+		};
+		$.ajaxSetup({
+			crossDomain: false, // obviates need for sameOrigin test
+			beforeSend: function(xhr,settings) {
+				xhr.setRequestHeader('X-CSRFToken',csrftoken);
+			}
+		});
+		$('#resultPane').empty().append('<div class="progressbar"></div>');
+		var posting = $.post("/moderation", $form.serialize(), $success, "json");
+		$(".progressbar").progressbar({value:false});
+	});
+	
+{% endblock %}
+

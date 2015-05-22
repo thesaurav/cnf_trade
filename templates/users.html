@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div id="notification" class="ui-corner-all notify-bar">ALERT: The device reports takes about 30 secs to generate. Please wait for a while.</div>
+<div id="formwrapper" class="ui-corner-all" >
+	<form id="dashboardForm">
+	{% csrf_token %}
+	<p>
+		<span class="field_label">{{ form.from_date.label_tag }}</span> : <span class="field_value">{{ form.from_date }}</span><span class="field_spacer">          </span><span class="field_label">{{ form.to_date.label_tag }}</span> : <span class="field_value">{{ form.to_date }}</span>
+	<br/>
+    <input type='checkbox' id="enableDev" value='devices'/><span class='field_label'>Enable Device Reports</span>
+	</p>
+	<br/>
+    <input type='submit' id="form_submit" value='Generate Report'/>
+	</form> 
+</div>
+	<div id="resultPane" class="ui-corner-all resultPane" >
+	</div>
+	<div id="resultPane1" class="ui-corner-all resultPane" >
+	</div>
+{% endblock %}
+{% block script %}
+	$("#id_from_date").datepicker({numberOfMonths : 1, minDate: (new Date(2013,5 - 1,1)), maxDate: "+0D"});
+	$("#id_to_date").datepicker({numberOfMonths:1, maxDate:"+1D"});
+	$("#form_submit").button();
+	$('#dashboardForm').submit(function(event) {
+		event.preventDefault();
+		var $form = $( this );
+		var $success = function(data) {
+			$("#progressbar").progressbar({disabled:true});
+			$('#resultPane').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="example"></table><br/><a download="report.csv" id="csv_submit">Download CSV</a>' );
+			$('#example').dataTable({
+				"bJQueryUI": true,
+				"bSort": false,
+				"aaData": data['content'],
+				"aoColumns": data['header']
+			});
+			var csv_header = []
+			var csv_body = [];
+			$.each(data['header'],function(k, v) {csv_header.push(v['sTitle']);});
+			var head = csv_header.join(',');
+			csv_body.push(head);
+			$.each(data['content'],function(i, val) {csv_body.push(val.join(','));});
+			var out = encodeURIComponent(csv_body.join('\n'));
+			$('#csv_submit').attr("href","data:application/csv;charset=utf-8,"+out);
+		};
+		var $success1 = function(data) {
+			var html = '';
+			$.each(data, function(i, val){html += '<p><b>'+i+'</b> : '+val+'</p><p>--------------------</p>';});
+			$('#resultPane1').empty().html(html);
+		};
+
+		$.ajaxSetup({
+			crossDomain: false, // obviates need for sameOrigin test
+			beforeSend: function(xhr,settings) {
+				xhr.setRequestHeader('X-CSRFToken',csrftoken);
+			}
+		});
+		$('#resultPane').empty().append('<div class="progressbar"></div>');
+		var posting = $.post("/users", $form.serialize(), $success, "json");
+		if(document.getElementById('enableDev').checked == true){
+			$('#resultPane1').empty().append('<div class="progressbar"></div>');
+			var dposting = $.post("/devices", $form.serialize(), $success1, "json");
+		}
+		$(".progressbar").progressbar({value:false});
+	});
+	
+{% endblock %}
+

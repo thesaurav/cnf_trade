@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CNF TRADE</title>
+        {% load staticfiles %}
+		<link rel='stylesheet'	type="text/css" href="{% static 'js/jquery.js' %}"/>
+		<link rel="stylesheet" href="css/myCss.css">
+  		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  		<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+  		<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  		<script src="js/myJavaScript.js"></script>
+	<script type="text/javascript">
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+	</script>
+
+	</head>
+	<body>
+		<div id="header">
+			<header id="masthead" role="banner">
+				<span><b>CNF TRADE</b></span>
+				<ul id="topmenu">
+					<li><a href="/users">About Us</a></li>
+					<li><a href="/places">Live Auctions</a></li>
+					<li><a href="/offers">Done Deals</a></li>
+				</ul>
+			</header>
+		</div>
+		<div id="body">
+			<div id="content">
+				{% block content %}{% endblock %}
+			</div>
+		</div>
+
+
+	<script type="text/javascript">
+		{% block script %}{% endblock %}
+	</script>
+	</body>
+</html>
