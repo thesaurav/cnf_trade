@@ -60,7 +60,7 @@
 		var posting = $.post("/users", $form.serialize(), $success, "json");
 		if(document.getElementById('enableDev').checked == true){
 			$('#resultPane1').empty().append('<div class="progressbar"></div>');
-			var dposting = $.post("/devices", $form.serialize(), $success1, "json");
+			var dposting = $.post("/device", $form.serialize(), $success1, "json");
 		}
 		$(".progressbar").progressbar({value:false});
 	});
